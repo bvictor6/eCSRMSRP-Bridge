@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.bcms.eCSRMSRPBridge.dto.SupplierDTO;
 import org.bcms.eCSRMSRPBridge.entities.Supplier;
 import org.bcms.eCSRMSRPBridge.repositories.SupplierRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,10 @@ public class SupplierService {
 	
 	public List<Supplier> getSupplierByNameContaining(String name){
 		return supplierRepository.findByNameContainingIgnoreCase(name);
+	}
+	
+	public List<SupplierDTO> getAllSuppliers(){
+		return supplierRepository.findAllSuppliers();
 	}
 
 }

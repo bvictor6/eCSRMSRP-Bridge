@@ -5,7 +5,6 @@
  */
 package org.bcms.eCSRMSRPBridge.controllers;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,6 +12,7 @@ import java.util.UUID;
 import org.bcms.eCSRMSRPBridge.classes.Constants;
 import org.bcms.eCSRMSRPBridge.components.JaroSimilarity;
 import org.bcms.eCSRMSRPBridge.components.JaroWinklerSimilarity;
+import org.bcms.eCSRMSRPBridge.dto.SupplierDTO;
 import org.bcms.eCSRMSRPBridge.entities.Supplier;
 import org.bcms.eCSRMSRPBridge.services.SupplierService;
 import org.slf4j.Logger;
@@ -64,9 +64,9 @@ public class SupplierController {
 		//String s1 = "Botswana Baylor Children's Clinical Centre of Excellence", s2 = "Botswana Baylor Childrens Centre"; 
 		double jwSimilarity = 0.00;
 		double jroSimilarity = 0.00;
-		List<Supplier> suppliers = supplierService.getSupplierByNameContaining(supplier.getName());
-		
-		for(Supplier s: suppliers) {
+		//List<Supplier> suppliers = supplierService.getSupplierByNameContaining(supplier.getName());
+		List<SupplierDTO> suppliers = supplierService.getAllSuppliers();
+		for(SupplierDTO s: suppliers) {
 			//
 			double jws = jaroWinklerSimilarity.jaro_Winkler(s.getName().toUpperCase(), supplier.getName().toUpperCase()) * 100; //multiply by 100 to make it a percentage
 			logger.info(s.getName() + " matches " +supplier.getName() + " by " + Math.floor(jws * 100)/100 + " using jaroWinklerSimilarity.");
@@ -77,6 +77,7 @@ public class SupplierController {
 				jwSimilarity = jws;
 			if((Math.floor(jrs * 100)/100) > (Math.floor(jroSimilarity * 100)/100))
 				jroSimilarity = jrs;
+			logger.info("--------------------------------------------------------");
 		}
 		
 		
