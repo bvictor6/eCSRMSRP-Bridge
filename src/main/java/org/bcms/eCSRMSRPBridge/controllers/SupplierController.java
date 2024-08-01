@@ -5,12 +5,14 @@
  */
 package org.bcms.eCSRMSRPBridge.controllers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.bcms.eCSRMSRPBridge.classes.NameParam;
-import org.bcms.eCSRMSRPBridge.entities.Contract;
+import org.bcms.eCSRMSRPBridge.classes.Constants;
+import org.bcms.eCSRMSRPBridge.components.JaroSimilarity;
+import org.bcms.eCSRMSRPBridge.components.JaroWinklerSimilarity;
 import org.bcms.eCSRMSRPBridge.entities.Supplier;
 import org.bcms.eCSRMSRPBridge.services.SupplierService;
 import org.slf4j.Logger;
@@ -18,25 +20,27 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 
  */
-@Controller
-@RequestMapping(path = "/api/suppliers")
+@RestController
+@RequestMapping(path = Constants.API_PATH_V1 + "/suppliers")
 public class SupplierController {
 	Logger logger = LoggerFactory.getLogger(getClass());
 	@Autowired SupplierService supplierService;
 	
-	@GetMapping("/{id}")
+	@Autowired JaroWinklerSimilarity jaroWinklerSimilarity;
+	@Autowired JaroSimilarity jaroSimilarity;
+	
+	@GetMapping("/suppliers/{id}")
 	public ResponseEntity<?> findById(@PathVariable("id") UUID id){
 		Optional<Supplier> supplier = supplierService.getSupplierById(id);
 		
@@ -48,14 +52,37 @@ public class SupplierController {
 	}
 	
 	@PostMapping(path = "/exact")
-	public ResponseEntity<?> findByName(@RequestBody NameParam supplier){
-		logger.info("find supplier name " + supplier.getName());
+	public ResponseEntity<?> findByName(@RequestBody Supplier supplier){
+		logger.info("find supplier exact match by name " + supplier.getName());
 		return new ResponseEntity<>(supplierService.getsupplierByName(supplier.getName()), HttpStatus.OK);
 	}
 	
-	@GetMapping(path = "/partial")
+	@CrossOrigin(origins = "http://127.0.0.1:8089")
+	@PostMapping(path = "/partial")
 	public ResponseEntity<?> findByContainsName(@RequestBody Supplier supplier){
-		return new ResponseEntity<>(supplierService.getSupplierByNameContaining(supplier.getName()),HttpStatus.OK);
+		logger.info("find supplier partial match by name " + supplier.getName());
+		//String s1 = "Botswana Baylor Children's Clinical Centre of Excellence", s2 = "Botswana Baylor Childrens Centre"; 
+		double jwSimilarity = 0.00;
+		double jroSimilarity = 0.00;
+		List<Supplier> suppliers = supplierService.getSupplierByNameContaining(supplier.getName());
+		
+		for(Supplier s: suppliers) {
+			//
+			double jws = jaroWinklerSimilarity.jaro_Winkler(s.getName().toUpperCase(), supplier.getName().toUpperCase()) * 100; //multiply by 100 to make it a percentage
+			logger.info(s.getName() + " matches " +supplier.getName() + " by " + Math.floor(jws * 100)/100 + " using jaroWinklerSimilarity.");
+			double jrs = jaroSimilarity.jaro_distance(s.getName().toUpperCase(), supplier.getName().toUpperCase()) * 100; //multiply by 100 to make it a percentage
+			logger.info(s.getName() + " matches " +supplier.getName() + " by " + Math.floor(jrs * 100)/100 + " using jaroSimilarity.");
+			//check if the match is higher than what we already got and assign to it
+			if((Math.floor(jws * 100)/100) > (Math.floor(jwSimilarity * 100)/100))
+				jwSimilarity = jws;
+			if((Math.floor(jrs * 100)/100) > (Math.floor(jroSimilarity * 100)/100))
+				jroSimilarity = jrs;
+		}
+		
+		
+		System.out.println("Jaro-Winkler Similarity =" + jwSimilarity ); //truncate to 2 decimal places
+		System.out.print("Jaro Similarity =" + jroSimilarity +"\n");
+		return new ResponseEntity<>(jwSimilarity,HttpStatus.OK);
 	}
 
 }
