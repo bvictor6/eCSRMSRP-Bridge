@@ -13,6 +13,7 @@ import org.bcms.eCSRMSRPBridge.classes.Constants;
 import org.bcms.eCSRMSRPBridge.components.JaroSimilarity;
 import org.bcms.eCSRMSRPBridge.components.JaroWinklerSimilarity;
 import org.bcms.eCSRMSRPBridge.dto.SupplierDTO;
+import org.bcms.eCSRMSRPBridge.dto.SupplierMatchDTO;
 import org.bcms.eCSRMSRPBridge.entities.Supplier;
 import org.bcms.eCSRMSRPBridge.services.SupplierService;
 import org.slf4j.Logger;
@@ -27,6 +28,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * 
@@ -59,11 +63,12 @@ public class SupplierController {
 	
 	@CrossOrigin(origins = "http://127.0.0.1:8089")
 	@PostMapping(path = "/partial")
-	public ResponseEntity<?> findByContainsName(@RequestBody Supplier supplier){
+	public ResponseEntity<String> findByContainsName(@RequestBody Supplier supplier){
 		logger.info("find supplier partial match by name " + supplier.getName());
 		//String s1 = "Botswana Baylor Children's Clinical Centre of Excellence", s2 = "Botswana Baylor Childrens Centre"; 
 		double jwSimilarity = 0.00;
 		double jroSimilarity = 0.00;
+		UUID ecsrmId =  null;
 		//List<Supplier> suppliers = supplierService.getSupplierByNameContaining(supplier.getName());
 		List<SupplierDTO> suppliers = supplierService.getAllSuppliers();
 		for(SupplierDTO s: suppliers) {
@@ -73,17 +78,33 @@ public class SupplierController {
 			double jrs = jaroSimilarity.jaro_distance(s.getName().toUpperCase(), supplier.getName().toUpperCase()) * 100; //multiply by 100 to make it a percentage
 			logger.info(s.getName() + " matches " +supplier.getName() + " by " + Math.floor(jrs * 100)/100 + " using jaroSimilarity.");
 			//check if the match is higher than what we already got and assign to it
-			if((Math.floor(jws * 100)/100) > (Math.floor(jwSimilarity * 100)/100))
+			if((Math.floor(jws * 100)/100) > (Math.floor(jwSimilarity * 100)/100)) {
 				jwSimilarity = jws;
+				ecsrmId = s.getId();
+			}
 			if((Math.floor(jrs * 100)/100) > (Math.floor(jroSimilarity * 100)/100))
 				jroSimilarity = jrs;
 			logger.info("--------------------------------------------------------");
-		}
-		
+		}		
 		
 		System.out.println("Jaro-Winkler Similarity =" + jwSimilarity ); //truncate to 2 decimal places
 		System.out.print("Jaro Similarity =" + jroSimilarity +"\n");
-		return new ResponseEntity<>(jwSimilarity,HttpStatus.OK);
+		//
+		SupplierMatchDTO supplierMatchDTO = new SupplierMatchDTO();
+		supplierMatchDTO.setEcsrmId(ecsrmId);
+		supplierMatchDTO.setJwSimilarity(jwSimilarity);
+		//
+		ObjectMapper obj = new ObjectMapper();
+		String jsonObject = null;
+		//convert to json
+		try {
+			jsonObject = obj.writeValueAsString(supplierMatchDTO);
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
+		return new ResponseEntity<String>(jsonObject,HttpStatus.OK);
 	}
 
 }
