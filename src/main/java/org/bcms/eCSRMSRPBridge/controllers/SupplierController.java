@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 @RestController
 @RequestMapping(path = Constants.API_PATH_V1 + "/suppliers")
+@CrossOrigin(origins = "http://127.0.0.1:8089")
 public class SupplierController {
 	Logger logger = LoggerFactory.getLogger(getClass());
 	@Autowired SupplierService supplierService;
@@ -61,13 +62,13 @@ public class SupplierController {
 		return new ResponseEntity<>(supplierService.getsupplierByName(supplier.getName()), HttpStatus.OK);
 	}
 	
-	@CrossOrigin(origins = "http://127.0.0.1:8089")
 	@PostMapping(path = "/partial")
 	public ResponseEntity<String> findByContainsName(@RequestBody Supplier supplier){
 		logger.info("find supplier partial match by name " + supplier.getName());
 		//String s1 = "Botswana Baylor Children's Clinical Centre of Excellence", s2 = "Botswana Baylor Childrens Centre"; 
 		double jwSimilarity = 0.00;
 		double jroSimilarity = 0.00;
+		String supplierName = null;
 		UUID ecsrmId =  null;
 		//List<Supplier> suppliers = supplierService.getSupplierByNameContaining(supplier.getName());
 		List<SupplierDTO> suppliers = supplierService.getAllSuppliers();
@@ -81,6 +82,7 @@ public class SupplierController {
 			if((Math.floor(jws * 100)/100) > (Math.floor(jwSimilarity * 100)/100)) {
 				jwSimilarity = jws;
 				ecsrmId = s.getId();
+				supplierName = s.getName();
 			}
 			if((Math.floor(jrs * 100)/100) > (Math.floor(jroSimilarity * 100)/100))
 				jroSimilarity = jrs;
@@ -93,6 +95,7 @@ public class SupplierController {
 		SupplierMatchDTO supplierMatchDTO = new SupplierMatchDTO();
 		supplierMatchDTO.setEcsrmId(ecsrmId);
 		supplierMatchDTO.setJwSimilarity(jwSimilarity);
+		supplierMatchDTO.setName(supplierName);
 		//
 		ObjectMapper obj = new ObjectMapper();
 		String jsonObject = null;

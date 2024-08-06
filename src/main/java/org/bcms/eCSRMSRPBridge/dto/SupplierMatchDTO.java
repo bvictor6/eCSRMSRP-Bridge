@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SupplierMatchDTO {
 	private UUID ecsrmId;
+	private String name;
 	private Double jwSimilarity;
 
 }

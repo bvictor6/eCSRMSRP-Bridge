@@ -6,6 +6,7 @@
 package org.bcms.eCSRMSRPBridge.controllers;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.bcms.eCSRMSRPBridge.classes.Constants;
 import org.bcms.eCSRMSRPBridge.entities.Contract;
@@ -16,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,6 +54,13 @@ Optional<Contract> contract = contractService.getByTenderNo(request.getTenderNo(
 		} else {
 			return new ResponseEntity<>("Contract not found with tender id " + request.getTenderNo(), HttpStatus.NOT_FOUND);
 		}
+	}
+	
+	@GetMapping(path = "/supplier/{id}")
+	public ResponseEntity<?> findSupplierContracts(@PathVariable("id") String id){
+		logger.info(String.valueOf(id));
+		contractService.findSupplierContracts(UUID.fromString(id));
+		return new ResponseEntity<>(contractService.findSupplierContracts(UUID.fromString(id)), HttpStatus.OK);
 	}
 
 }
