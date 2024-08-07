@@ -8,7 +8,8 @@ package org.bcms.eCSRMSRPBridge.interfaces;
 import java.util.UUID;
 
 /**
- * 
+ *  Used to a native SQL query for supplier contracts :: findContractsBySupplierId(@Param("id") UUID id);
+ *  the fields must match the database table fields in the query!
  */
 public interface ContractDetails {
 	UUID getId();

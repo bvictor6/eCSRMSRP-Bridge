@@ -6,7 +6,6 @@
 package org.bcms.eCSRMSRPBridge.repositories;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +25,9 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
 	
 	List<Contract> findBySupplierId(UUID id);
 	
+	/*
+	 * Return contracts for a given supplier
+	 */
 	@Query(nativeQuery = true, value = "SELECT c.id,c.tender_no,c.contract_no, "
 			+ "c.description,c.category,c.state,c.title,"
 			+ "	c.total_contract_value,c.termination_notice_period,c.contract_term,"
@@ -34,4 +36,16 @@ public interface ContractRepository extends JpaRepository<Contract, UUID> {
 			+ "	inner join public.ecsrm_cont_type t on t.id=c.contract_type_id"
 			+ "	where c.supplier_id=:id")
 	List<ContractDetails> findContractsBySupplierId(@Param("id") UUID id);
+	
+	/*
+	 * Return a given contract for a given supplier
+	 */
+	@Query(nativeQuery = true, value = "SELECT c.id,c.tender_no,c.contract_no, "
+			+ "c.description,c.category,c.state,c.title,"
+			+ "	c.total_contract_value,c.termination_notice_period,c.contract_term,"
+			+ "	c.is_active,c.is_approved,t.name as contract_type"
+			+ "	FROM public.ecsrm_cont_register c"
+			+ "	inner join public.ecsrm_cont_type t on t.id=c.contract_type_id"
+			+ "	where c.id=:cid AND c.supplier_id=:id  ")
+	ContractDetails findContractByIdBySupplierId(@Param("cid") UUID cid, @Param("id") UUID id);
 }

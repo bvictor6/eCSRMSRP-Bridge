@@ -58,9 +58,16 @@ Optional<Contract> contract = contractService.getByTenderNo(request.getTenderNo(
 	
 	@GetMapping(path = "/supplier/{id}")
 	public ResponseEntity<?> findSupplierContracts(@PathVariable("id") String id){
-		logger.info(String.valueOf(id));
-		contractService.findSupplierContracts(UUID.fromString(id));
+		logger.info("Fetch contracts for supplier " + String.valueOf(id));
 		return new ResponseEntity<>(contractService.findSupplierContracts(UUID.fromString(id)), HttpStatus.OK);
+	}
+	
+	@GetMapping(path = "/supplier/{id}/{contract}")
+	public ResponseEntity<?> findSupplierContract(@PathVariable("id") String id, @PathVariable("contract") String contract){
+		logger.info("Fetch contract details for contract - " + contract + " and supplier - " +id);
+		
+		return new ResponseEntity<>(contractService.findSupplierContract(UUID.fromString(contract), 
+				UUID.fromString(id)), HttpStatus.OK);
 	}
 
 }

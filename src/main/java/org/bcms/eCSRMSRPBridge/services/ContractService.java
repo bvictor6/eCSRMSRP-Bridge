@@ -5,9 +5,7 @@
  */
 package org.bcms.eCSRMSRPBridge.services;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,10 +37,20 @@ public class ContractService {
 		return contractRepository.findBySupplierId(id);
 	}
 	
+	/*
+	 * Get all contracts with details for a particular supplier using a custom native query
+	 */
 	public List<ContractDetails> findSupplierContracts(UUID id) {
 		List<ContractDetails> contracts = contractRepository.findContractsBySupplierId(id);
 		
 		return contracts;
+	}
+	
+	/**
+	 * Get contract details for a particular contract belonging to a given supplier
+	 */
+	public ContractDetails findSupplierContract(UUID contractId, UUID supplierId) {
+		return contractRepository.findContractByIdBySupplierId(contractId, supplierId);
 	}
 
 }
